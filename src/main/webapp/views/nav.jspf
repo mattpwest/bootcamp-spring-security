@@ -1,4 +1,6 @@
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 
 <c:set var="homeClass" value="${nav.equals('home') ? 'active' : ''}" />
 <c:set var="publisherClass" value="${nav.equals('publisher') ? 'active' : ''}" />
@@ -22,6 +24,14 @@
                 <li class="${homeClass}"><a href="/">Home</a></li>
                 <li class="${publisherClass}"><a href="<c:url value="/report"/>">Publishers</a></li>
             </ul>
+
+            <sec:authorize access="isAuthenticated()">
+                <form:form action="/logout" method="post" cssClass="navbar-form navbar-right">
+                    <div class="form-group">
+                        <input type="submit" value="Sign Out" class="btn btn-link"/>
+                    </div>
+                </form:form>
+            </sec:authorize>
         </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
 </nav>

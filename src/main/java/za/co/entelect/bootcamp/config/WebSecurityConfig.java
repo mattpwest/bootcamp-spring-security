@@ -15,9 +15,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
             .authorizeRequests()
-                .anyRequest().authenticated()
+                .mvcMatchers("/", "/login", "/report/**").permitAll()
+                .mvcMatchers("/superheroes/**").hasRole("USER")
                 .and()
-            .httpBasic()
+            .formLogin()
+                .loginPage("/login")
                 .and()
             .logout();
     }

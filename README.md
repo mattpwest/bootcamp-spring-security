@@ -81,3 +81,120 @@ for testing:
 
 If you run again and log in with the username and password above, you should be
 able to access the application pages again...
+
+## Exercise 2 (branch: `exercise2`)
+
+We have some basic security in place now, but there are several problems with
+our setup:
+ * All pages are blocked unless you have a login, so we are unlikely to be able
+ convince prospective users to use our site.
+ * HTTP Basic authentication is ugly and does not fit the style of the site.
+ * HTTP Basic authentication does not allow the user to logout.
+
+### Part 1: Finer grained authorization
+
+Since it's impossible to log out of HTTP Basic authentication, remove
+`httpBasic()` from your security configuration, then  tweak the
+`authorizeRequests` section of the security configuration as follows:
+ * `/`: Freely accessible.
+ * `/report/**`: Freely accessible.
+ * `/superheroes/**`: Require role `USER` to add or delete heroes.
+
+Restart and test by browsing around the site... you should see access denied
+errors when trying to add or delete a hero. 
+
+### Part 2: Login and logout
+
+Add `.formLogin()` to your `HttpSecurity` configuration, run the application
+and try adding a hero again. You'll be redirected to an ugly, but functional
+login page and if you put in the username and password you will be able to
+proceed.
+
+We'd like to add a nicer login page, but before that let's add logout
+functionality first, otherwise it will be very difficult to log out so you
+can test your shiny new login page...
+
+First add a Maven dependency for the Spring Security JSP taglibs:
+
+```
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-taglibs</artifactId>
+</dependency>
+```
+
+Now you'll see that the navigation section of the pages has been stripped
+out into a JSP fragment in `nav.jspf`. First add the taglib to it:
+
+```
+<%@taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
+```
+ 
+Then add the following snippet to `nav.jspf` after the `</ul>` tag:
+
+```
+<sec:authorize access="isAuthenticated()">
+    <form:form action="/logout" method="post" cssClass="navbar-form navbar-right">
+        <div class="form-group">
+            <input type="submit" value="Sign Out" class="btn btn-link"/>
+        </div>
+    </form:form>
+</sec:authorize>
+```
+
+Run the application, try to add a hero, log in and then verify that a logout
+link appears in the navigation. If you hit the logout button you will be
+redirected back to the login page and message will be shown saying that you
+have successfully logged out.
+
+### Part 3: Custom login page 
+
+Finally, let's make the login page a bit prettier and more consistent with the
+design of our application...
+
+First make a copy of `index.jsp` called `login.jsp` we'll edit this page to
+add the necessary functionality for login. Replace the welcome section with
+a login form:
+
+```
+<h1>Login</h1>
+
+<form action="/login" method="post">
+    <input type="hidden"
+           name="${_csrf.parameterName}"
+           value="${_csrf.token}"/>
+
+    <div class="form-group">
+        <label for="username">Username</label>
+        <input name="username" id="username" />
+    </div>
+
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password"/>
+    </div>
+
+    <c:if test="${param.error != null}">
+        <div class="form-group">
+            <div class="alert alert-danger" role="alert">
+                <p>Invalid username or password.</p>
+            </div>
+        </div>
+    </c:if>
+
+    <button name="submit" class="btn btn-primary">Login</button>
+</form>
+```
+
+Now to start using this custom login page we need a few things:
+ * Add a `LoginController` that will serve `login.jsp` on the `/login`
+ URI - your easiest option is to copy `HomeController` and tweak it.
+ * Configure the paths that are freely accessible in your security
+ configuration to include `/login`.
+ * Configure the `formLogin()` section of your security configuration
+ with `.loginPage("/login")` to tell Spring Security what page to use
+ for logging in.
+
+Run the application and verify that you now get a prettier login page
+when you try to add or delete a hero.

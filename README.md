@@ -32,7 +32,7 @@ Add this dependency to your `pom.xml`:
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-security</artifactId>
-</dependency> 
+</dependency>
 ```
 
 Add the class `za.co.entelect.bootcamp.config.WebSecurityConfig`, it should
@@ -56,7 +56,9 @@ http
     .authorizeRequests() // Configure authorization
         .anyRequest().authenticated() // All requests must be authenticated
         .and()
-    .httpBasic(); // Use HTTP Basic authentication
+    .httpBasic() // Use HTTP Basic authentication
+        .and()
+    .logout(); // Enable logout functionality, but note that it won't work for BASIC auth...
 ```
 
 Now run the application and try to access it `http://localhost:8080`. You'll
